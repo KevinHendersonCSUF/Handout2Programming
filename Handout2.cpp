@@ -5,94 +5,75 @@
 // Purpose: this program reads an expression in postfix form, evaluates the
 // expression and displays its value
 //-----------------------------------------------------------------------------------------------------------------
-#include <cstdlib>
-#include <iostream>
-#include <stack>
-#include <string>
+#include <iostream>     // For input/output
+#include <stack>        // For stack data structure
+#include <string>       // For string manipulation
+#include <sstream>      // For string stream
+#include <unordered_map>        // For hash map
+#include <cctype>       // For isdigit
 
 int main() {
-  while (true) {
-    std::string expression;
-    std::stack<int> stack;
-    char cont;
-    std::cout << "Enter a postfix expression with a $ at the end:" << std::endl;
-    std::cin >> expression;
-    for (int i = 0; i < expression.size(); i++) {
-    std::string temp;
-    int temp_value = 0;
-    bool contains_letter = false;
-    //   if (expression[i] == '1' || expression[i] == '2' ||
-    //       expression[i] == '3' || expression[i] == '4' ||
-    //       expression[i] == '5' || expression[i] == '6' ||
-    //       expression[i] == '7' || expression[i] == '8' ||
-    //       expression[i] == '9' || expression[i] == '0') {
-
-    //   }
-    if (expression[i] != ' ' && expression[i] != '+' && expression[i] != '-' && expression[i] != '*' && expression[i] != '$') {
-        temp.push_back(expression[i]);
-    }
-    else {
-        for (int j = 0; j < temp.size(); j++) {
-            if(j < '0' && j > '9') {
-            contains_letter = true;
-            break;
+    while (true) {
+        std::string expression;
+        std::stack<int> stack;
+        std::unordered_map<std::string, int> variables;
+        char cont;
+        
+        std::cout << "Enter a postfix expression with a $ at the end:" << std::endl;
+        std::getline(std::cin, expression);  // Read the entire line for expression
+        
+        std::stringstream ss(expression);
+        std::string token;
+        
+        // Process the postfix expression
+        while (ss >> token) {
+            if (token == "$") {
+                break;
+            } else if (token == "+" || token == "-" || token == "*") {
+                // Handle operators
+                int top = stack.top();
+                stack.pop();
+                int bottom = stack.top();
+                stack.pop();
+                
+                if (token == "+") {
+                    stack.push(bottom + top);
+                } else if (token == "-") {
+                    stack.push(bottom - top);
+                } else if (token == "*") {
+                    stack.push(bottom * top);
+                }
+            } else {
+                // Handle numbers and variables
+                if (isdigit(token[0]) || (token[0] == '-' && token.size() > 1 && isdigit(token[1]))) {
+                    // If the token is an integer 
+                    stack.push(std::stoi(token));
+                } else {
+                    // If token is a variable
+                    if (variables.find(token) == variables.end()) {
+                        // Prompt for the variable's value 
+                        int value;
+                        std::cout << "Enter the value of " << token << ": ";
+                        std::cin >> value;
+                        variables[token] = value;
+                    }
+                    stack.push(variables[token]);
+                }
             }
         }
-    if(contains_letter == true) {
-        std::cout << "\n Enter the value of " << temp << ": ";
-        std::cin >> temp_value;
-        stack.push(temp_value);
-        temp.clear();
-        contains_letter = false;
-    }
-    else if(contains_letter == false) {
-        temp_value = stoi(temp);
-        stack.push(temp_value);
-    }
-    }
-    if (expression[i] == '+' || expression[i] == '-' || expression[i] == '*') {
-        if(expression[i] == '+')
-        {
-            int top = stack.top();
-            stack.pop();
-            int bottom = stack.top();
-            stack.pop();
-            int sum = bottom + top;
-            stack.push(sum);
-        }
-        if(expression[i] == '-')
-        {
-            int top = stack.top();
-            stack.pop();
-            int bottom = stack.top();
-            stack.pop();
-            int sub = bottom - top;
-            stack.push(sub);
-        }
-        if(expression[i] == '*')
-        {
-            int top = stack.top();
-            stack.pop();
-            int bottom = stack.top();
-            stack.pop();
-            int multi = bottom * top;
-            stack.push(multi);
-        }
-    }
-   else {
+        
+        // Display the final result
         int final_value = stack.top();
         std::cout << "Expression's value is " << final_value << std::endl;
-        break; 
+        
+        // Ask for continuation
+        std::cout << "CONTINUE(y/n)? ";
+        std::cin >> cont;
+        std::cin.ignore(); // To handle the newline after the input
+        if (cont == 'n') {
+            break;
+        }
     }
-    }
-    std::cout << "CONTINUE(y/n)?";
-    std::cin >> cont;
-    if (cont == 'n') {
-        break;
-    }
-    if(cont != 'n' && cont != 'y') {
-        std::cout << "invalid input, terminating program" << std::endl;
-    }
-  }
-  return 0;
+    
+    return 0;
 }
